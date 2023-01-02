@@ -1,0 +1,5 @@
+# Package environment
+/env
+
+# Python
+__pycache__/

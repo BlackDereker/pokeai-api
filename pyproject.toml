@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "pokeai-api"
+version = "0.1.0"
+description = "Pokemon API with AI services"
+authors = ["BlackDereker"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "pokeai_api"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+uvicorn = "^0.20.0"
+fastapi-restful = "^0.4.3"
+loguru = "^0.6.0"
+fastapi = "^0.88.0"
+
+
+[tool.poetry.group.dev.dependencies]
+pylama = "^8.4.1"
+pre-commit = "^2.21.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
