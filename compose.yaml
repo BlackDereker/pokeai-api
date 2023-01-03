@@ -9,3 +9,22 @@ services:
       - "8000:8000"
     networks:
       - default
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: mongo:4.2
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./data/db:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
