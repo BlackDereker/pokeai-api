@@ -1,6 +1,6 @@
 from fastapi_restful import Resource
 
-from pokeai_api.schemas.health import Health
+from pokeai_api.schemas import Health
 
 
 class Health(Resource):
