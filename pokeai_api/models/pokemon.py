@@ -22,7 +22,7 @@ class PokemonORM(Document):
     pokedex_number: Indexed(int)
     percentage_male: float
     type1: str
-    type2: str
+    type2: str | None
     classification: str
     height_m: float
     weight_kg: float
