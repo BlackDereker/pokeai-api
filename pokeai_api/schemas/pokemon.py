@@ -1,8 +1,158 @@
+from fastapi_restful.api_model import APIModel
 from pydantic import BaseModel, Field
-from pydantic_factories import ModelFactory
 
 
-class Pokemon(BaseModel):
+class Against(BaseModel):
+    bug: float = Field(
+        default=1.0,
+        description="The effectiveness of Bug-type moves",
+        example=1.0,
+        ge=0.0,
+    )
+    dark: float = Field(
+        default=1.0,
+        description="The effectiveness of Dark-type moves",
+        example=1.0,
+        ge=0.0,
+    )
+    dragon: float = Field(
+        default=1.0,
+        description="The effectiveness of Dragon-type moves",
+        example=1.0,
+        ge=0.0,
+    )
+    electric: float = Field(
+        default=1.0,
+        description="The effectiveness of Electric-type moves",
+        example=1.0,
+        ge=0.0,
+    )
+    fairy: float = Field(
+        default=1.0,
+        description="The effectiveness of Fairy-type moves",
+        example=1.0,
+        ge=0.0,
+    )
+    fight: float = Field(
+        default=1.0,
+        description="The effectiveness of Fighting-type moves",
+        example=1.0,
+        ge=0.0,
+    )
+    fire: float = Field(
+        default=1.0,
+        description="The effectiveness of Fire-type moves",
+        example=1.0,
+        ge=0.0,
+    )
+    flying: float = Field(
+        default=1.0,
+        description="The effectiveness of Flying-type moves",
+        example=1.0,
+        ge=0.0,
+    )
+    ghost: float = Field(
+        default=1.0,
+        description="The effectiveness of Ghost-type moves",
+        example=1.0,
+        ge=0.0,
+    )
+    grass: float = Field(
+        default=1.0,
+        description="The effectiveness of Grass-type moves",
+        example=1.0,
+        ge=0.0,
+    )
+    ground: float = Field(
+        default=1.0,
+        description="The effectiveness of Ground-type moves",
+        example=1.0,
+        ge=0.0,
+    )
+    ice: float = Field(
+        default=1.0,
+        description="The effectiveness of Ice-type moves",
+        example=1.0,
+        ge=0.0,
+    )
+    normal: float = Field(
+        default=1.0,
+        description="The effectiveness of Normal-type moves",
+        example=1.0,
+        ge=0.0,
+    )
+    poison: float = Field(
+        default=1.0,
+        description="The effectiveness of Poison-type moves",
+        example=1.0,
+        ge=0.0,
+    )
+    psychic: float = Field(
+        default=1.0,
+        description="The effectiveness of Psychic-type moves",
+        example=1.0,
+        ge=0.0,
+    )
+    rock: float = Field(
+        default=1.0,
+        description="The effectiveness of Rock-type moves",
+        example=1.0,
+        ge=0.0,
+    )
+    steel: float = Field(
+        default=1.0,
+        description="The effectiveness of Steel-type moves",
+        example=1.0,
+        ge=0.0,
+    )
+    water: float = Field(
+        default=1.0,
+        description="The effectiveness of Water-type moves",
+        example=1.0,
+        ge=0.0,
+    )
+
+
+class Attributes(BaseModel):
+    hp: int = Field(
+        ...,
+        description="The base HP of the Pokémon",
+        example=45,
+        ge=1,
+    )
+    attack: int = Field(
+        ...,
+        description="The base Attack of the Pokémon",
+        example=49,
+        ge=0,
+    )
+    defense: int = Field(
+        ...,
+        description="The base Defense of the Pokémon",
+        example=49,
+        ge=0,
+    )
+    sp_attack: int = Field(
+        ...,
+        description="The base Special Attack of the Pokémon",
+        example=65,
+        ge=0,
+    )
+    sp_defense: int = Field(
+        ...,
+        description="The base Special Defense of the Pokémon",
+        example=65,
+        ge=0,
+    )
+    speed: int = Field(
+        ...,
+        description="The base Speed of the Pokémon",
+        example=45,
+        ge=0,
+    )
+
+
+class Pokemon(APIModel):
     name: str = Field(
         ..., description="The English name of the Pokémon", example="Bulbasaur"
     )
@@ -23,16 +173,16 @@ class Pokemon(BaseModel):
     type1: str = Field(
         ..., description="The primary type of the Pokémon", example="Grass"
     )
-    type2: str = Field(
+    type2: str | None = Field(
         ..., description="The secondary type of the Pokémon", example="Poison"
     )
     classification: str = Field(
         ..., description="The classification of the Pokémon", example="Seed Pokémon"
     )
-    height_m: float = Field(
+    height_m: float | None = Field(
         ..., description="The height of the Pokémon in meters", example=0.7
     )
-    weight_kg: float = Field(
+    weight_kg: float | None = Field(
         ..., description="The weight of the Pokémon in kilograms", example=6.9
     )
     capture_rate: int = Field(
@@ -45,10 +195,10 @@ class Pokemon(BaseModel):
         ),
         example=5120,
     )
-    abilities: str = Field(
+    abilities: list[str] = Field(
         ...,
         description="The abilities of the Pokémon",
-        example='["Overgrow", "Chlorophyll"]',
+        example=["Overgrow", "Chlorophyll"],
     )
     experience_growth: int = Field(
         ..., description="The experience growth of the Pokémon", example=1059860
@@ -56,12 +206,12 @@ class Pokemon(BaseModel):
     base_happiness: int = Field(
         ..., description="The base happiness of the Pokémon", example=70
     )
-    against: dict[str, float] = Field(
+    against: Against = Field(
         ...,
         description="The effectiveness of the Pokémon against other types",
         example={
             "normal": 1.0,
-            "fighting": 1.0,
+            "fight": 1.0,
             "flying": 1.0,
             "poison": 1.0,
             "ground": 1.0,
@@ -80,7 +230,7 @@ class Pokemon(BaseModel):
             "fairy": 1.0,
         },
     )
-    attributes: dict[str, int] = Field(
+    attributes: Attributes = Field(
         ...,
         description="The base attributes of the Pokémon",
         example={
@@ -96,7 +246,3 @@ class Pokemon(BaseModel):
     is_legendary: bool = Field(
         ..., description="Whether the Pokémon is legendary", example=False
     )
-
-
-class PokemonFactory(ModelFactory):
-    __model__ = Pokemon

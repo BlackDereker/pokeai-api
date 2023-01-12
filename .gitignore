@@ -6,3 +6,6 @@ __pycache__/
 
 # Database
 /data
+
+# Ignore dynaconf secret files
+.secrets.*
