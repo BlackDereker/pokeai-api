@@ -7,6 +7,8 @@ services:
     build: .
     ports:
       - "8000:8000"
+    environment:
+      DYNACONF_MONGO_HOST: db
     networks:
       - default
     depends_on:
