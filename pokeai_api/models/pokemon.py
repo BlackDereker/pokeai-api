@@ -1,31 +1,20 @@
 from beanie import Document, Indexed
-from pydantic import BaseModel
+
+from pokeai_api.schemas.pokemon import Against, Attributes
 
 
-class Against(BaseModel):
-    type: str
-    value: float
+class PokemonODM(Document):
+    """ODM for Pokémon"""
 
-
-class Attributes(BaseModel):
-    hp: int
-    attack: int
-    defense: int
-    sp_attack: int
-    sp_defense: int
-    speed: int
-
-
-class PokemonORM(Document):
     name: str
     japanese_name: str
-    pokedex_number: Indexed(int)
+    pokedex_number: Indexed(int, unique=True)
     percentage_male: float
     type1: str
     type2: str | None
     classification: str
-    height_m: float
-    weight_kg: float
+    height_m: float | None
+    weight_kg: float | None
     capture_rate: int
     base_egg_steps: int
     abilities: list[str]
@@ -35,3 +24,6 @@ class PokemonORM(Document):
     attributes: Attributes
     generation: int
     is_legendary: bool
+
+    class Settings:
+        name = "pokemons"

@@ -1,1 +1,1 @@
-from .pokemon import PokemonORM  # noqa: F401
+from .pokemon import PokemonODM  # noqa: F401
