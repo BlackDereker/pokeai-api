@@ -1,6 +1,6 @@
 from beanie import Document, Indexed
 
-from pokeai_api.schemas.pokemon import Against, Attributes
+from pokeai_api.schemas.pokemon import Against, Attributes, Metadata
 
 
 class PokemonODM(Document):
@@ -24,6 +24,7 @@ class PokemonODM(Document):
     attributes: Attributes
     generation: int
     is_legendary: bool
+    metadata: Metadata
 
     class Settings:
         name = "pokemons"

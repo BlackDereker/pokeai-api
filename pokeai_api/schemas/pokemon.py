@@ -1,3 +1,4 @@
+from datetime import datetime
 from fastapi_restful.api_model import APIModel
 from pydantic import BaseModel, Field
 
@@ -152,7 +153,13 @@ class Attributes(BaseModel):
     )
 
 
-class Pokemon(APIModel):
+class Metadata(BaseModel):
+    custom: bool = Field(default=True)
+    created_at: datetime
+    updated_at: datetime
+
+
+class PokemonBase(APIModel):
     name: str = Field(
         ..., description="The English name of the Pokémon", example="Bulbasaur"
     )
@@ -245,4 +252,30 @@ class Pokemon(APIModel):
     generation: int = Field(..., description="The generation of the Pokémon", example=1)
     is_legendary: bool = Field(
         ..., description="Whether the Pokémon is legendary", example=False
+    )
+
+
+class Pokemon(PokemonBase):
+    metadata: Metadata = Field(
+        ...,
+        description="Metadata about the Pokémon",
+        example={
+            "custom": True,
+            "created_at": "2021-08-01T00:00:00",
+            "updated_at": "2021-08-01T00:00:00",
+        },
+    )
+
+
+class PokemonPost(PokemonBase):
+    pass
+
+
+class PokemonUpdate(PokemonBase):
+    pass
+
+
+class PokemonDeleteResponse(BaseModel):
+    deleted: bool = Field(
+        ..., description="Whether the Pokémon was deleted", example=True
     )
