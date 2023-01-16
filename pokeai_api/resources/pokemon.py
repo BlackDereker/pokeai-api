@@ -1,8 +1,16 @@
+from datetime import datetime, timezone
+from typing import Any
+
 from fastapi import HTTPException, Path, Query, Body
 from fastapi_restful import Resource
 from pymongo.errors import DuplicateKeyError
 
-from pokeai_api.schemas import Pokemon
+from pokeai_api.schemas import (
+    Pokemon,
+    PokemonPost,
+    PokemonUpdate,
+    PokemonDeleteResponse,
+)
 from pokeai_api.models import PokemonODM
 from pokeai_api.resources.exceptions import PokemonNotFound
 
@@ -36,18 +44,39 @@ class PokemonList(Resource):
 
     async def post(
         self,
-        pokemon: Pokemon,
+        pokemon: PokemonPost,
     ) -> Pokemon:
-        """Create a Pokémon"""
+        """Create a Pokémon
+        If a Pokémon with the same Pokédex number already exists, a 409 Conflict
+        response will be returned.
+
+        For user defined pokémon, the Pokédex number should be greater or equal
+        than 1000.
+        """
+
+        if pokemon.pokedex_number < 1000:
+            raise HTTPException(
+                status_code=403,
+                detail="Pokédex number must be greater or equal than 1000",
+            )
+
+        pokemon_data: dict[str, Any] = pokemon.dict()
+
+        pokemon_data["metadata"] = {
+            "custom": True,
+            "created_at": datetime.now(timezone.utc),
+            "updated_at": datetime.now(timezone.utc),
+        }
+
         try:
-            pokemon_orm: PokemonODM = await PokemonODM(**pokemon.dict()).save()
-        except DuplicateKeyError:
+            pokemon_odm: PokemonODM = await PokemonODM(**pokemon_data).save()
+        except DuplicateKeyError as e:
             raise HTTPException(
                 status_code=409,
                 detail="Pokémon already exists with that Pokédex number",
-            )
+            ) from e
 
-        return Pokemon.from_orm(pokemon_orm)
+        return Pokemon.from_orm(pokemon_odm)
 
 
 class PokemonDetail(Resource):
@@ -60,7 +89,6 @@ class PokemonDetail(Resource):
             description="The number of the Pokémon in the Pokédex",
             example=1,
             gt=0,
-            lt=803,
         ),
     ) -> Pokemon:
         """Get a Pokémon by its Pokédex number"""
@@ -80,14 +108,20 @@ class PokemonDetail(Resource):
             description="The number of the Pokémon in the Pokédex",
             example=1,
             gt=0,
-            lt=803,
         ),
-        pokemon: Pokemon = Body(
+        pokemon: PokemonUpdate = Body(
             ...,
             description="The Pokémon to fully update",
         ),
     ) -> Pokemon:
         """Fully Update a Pokémon by its Pokédex number"""
+
+        if pokedex_number < 1000:
+            raise HTTPException(
+                status_code=403,
+                detail="Pokédex number must be greater or equal than 1000",
+            )
+
         pokemon_odm: PokemonODM = await PokemonODM.find_one(
             {"pokedex_number": pokedex_number}
         )
@@ -95,7 +129,15 @@ class PokemonDetail(Resource):
         if not pokemon_odm:
             raise PokemonNotFound(pokedex_number)
 
-        updated_pokemon: Pokemon = await pokemon_odm.update(**pokemon.dict())
+        pokemon_data: dict[str, Any] = pokemon.dict()
+
+        pokemon_data["metadata"] = {
+            "custom": True,
+            "created_at": pokemon_odm.metadata.created_at,
+            "updated_at": datetime.now(timezone.utc),
+        }
+
+        updated_pokemon: Pokemon = await pokemon_odm.update(**pokemon_data)
 
         return Pokemon.from_orm(updated_pokemon)
 
@@ -106,7 +148,6 @@ class PokemonDetail(Resource):
             description="The number of the Pokémon in the Pokédex",
             example=1,
             gt=0,
-            lt=803,
         ),
         pokemon: Pokemon = Body(
             ...,
@@ -114,6 +155,13 @@ class PokemonDetail(Resource):
         ),
     ) -> Pokemon:
         """Partially Update a Pokémon by its Pokédex number"""
+
+        if pokedex_number < 1000:
+            raise HTTPException(
+                status_code=403,
+                detail="Pokédex number must be greater or equal than 1000",
+            )
+
         pokemon_odm: PokemonODM = await PokemonODM.find_one(
             {"pokedex_number": pokedex_number}
         )
@@ -121,8 +169,16 @@ class PokemonDetail(Resource):
         if not pokemon_odm:
             raise PokemonNotFound(pokedex_number)
 
+        pokemon_data: dict[str, Any] = pokemon.dict()
+
+        pokemon_data["metadata"] = {
+            "custom": True,
+            "created_at": pokemon_odm.metadata.created_at,
+            "updated_at": datetime.now(timezone.utc),
+        }
+
         updated_pokemon: Pokemon = await pokemon_odm.update(
-            **pokemon.dict(exclude_unset=True)
+            **pokemon_data(exclude_unset=True)
         )
 
         return Pokemon.from_orm(updated_pokemon)
@@ -134,10 +190,16 @@ class PokemonDetail(Resource):
             description="The number of the Pokémon in the Pokédex",
             example=1,
             gt=0,
-            lt=803,
         ),
-    ) -> Pokemon:
+    ) -> PokemonDeleteResponse:
         """Delete a Pokémon by its Pokédex number"""
+
+        if pokedex_number < 1000:
+            raise HTTPException(
+                status_code=403,
+                detail="Pokédex number must be greater or equal than 1000",
+            )
+
         pokemon_odm: PokemonODM = await PokemonODM.find_one(
             {"pokedex_number": pokedex_number}
         )
@@ -147,4 +209,6 @@ class PokemonDetail(Resource):
 
         await pokemon_odm.delete()
 
-        return {"message": "Pokémon deleted successfully"}
+        return PokemonDeleteResponse(
+            deleted=True,
+        )
