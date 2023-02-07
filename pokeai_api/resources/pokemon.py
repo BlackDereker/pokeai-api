@@ -1,14 +1,15 @@
 from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import HTTPException, Path, Query, Body
+from fastapi import HTTPException, Path, Query
 from fastapi_restful import Resource
 from pymongo.errors import DuplicateKeyError
+from pymongo.results import DeleteResult
 
 from pokeai_api.schemas import (
     Pokemon,
-    PokemonPost,
-    PokemonUpdate,
+    PokemonBody,
+    PokemonUpdateResponse,
     PokemonDeleteResponse,
 )
 from pokeai_api.models import PokemonODM
@@ -44,23 +45,23 @@ class PokemonList(Resource):
 
     async def post(
         self,
-        pokemon: PokemonPost,
+        pokemon: PokemonBody,
     ) -> Pokemon:
-        """Create a Pokémon
-        If a Pokémon with the same Pokédex number already exists, a 409 Conflict
-        response will be returned.
-
-        For user defined pokémon, the Pokédex number should be greater or equal
-        than 1000.
-        """
-
-        if pokemon.pokedex_number < 1000:
-            raise HTTPException(
-                status_code=403,
-                detail="Pokédex number must be greater or equal than 1000",
-            )
+        """Create a Pokémon."""
 
         pokemon_data: dict[str, Any] = pokemon.dict()
+
+        last_pokemon: PokemonODM = await PokemonODM.find_one(
+            sort=[("pokedex_number", -1)]
+        )
+
+        pokedex_number: int = (
+            last_pokemon.pokedex_number + 1
+            if last_pokemon.pokedex_number >= 1000
+            else 1000
+        )
+
+        pokemon_data["pokedex_number"] = pokedex_number
 
         pokemon_data["metadata"] = {
             "custom": True,
@@ -103,17 +104,14 @@ class PokemonDetail(Resource):
 
     async def put(
         self,
+        pokemon: PokemonBody,
         pokedex_number: int = Path(
             ...,
             description="The number of the Pokémon in the Pokédex",
             example=1,
             gt=0,
         ),
-        pokemon: PokemonUpdate = Body(
-            ...,
-            description="The Pokémon to fully update",
-        ),
-    ) -> Pokemon:
+    ) -> PokemonUpdateResponse:
         """Fully Update a Pokémon by its Pokédex number"""
 
         if pokedex_number < 1000:
@@ -137,23 +135,20 @@ class PokemonDetail(Resource):
             "updated_at": datetime.now(timezone.utc),
         }
 
-        updated_pokemon: Pokemon = await pokemon_odm.update(**pokemon_data)
+        await pokemon_odm.set(pokemon_data)
 
-        return updated_pokemon
+        return PokemonUpdateResponse(updated=True)
 
     async def patch(
         self,
+        pokemon: dict[str, Any],
         pokedex_number: int = Path(
             ...,
             description="The number of the Pokémon in the Pokédex",
             example=1,
             gt=0,
         ),
-        pokemon: Pokemon = Body(
-            ...,
-            description="The Pokémon to partially update",
-        ),
-    ) -> Pokemon:
+    ) -> PokemonUpdateResponse:
         """Partially Update a Pokémon by its Pokédex number"""
 
         if pokedex_number < 1000:
@@ -169,19 +164,17 @@ class PokemonDetail(Resource):
         if not pokemon_odm:
             raise PokemonNotFound(pokedex_number)
 
-        pokemon_data: dict[str, Any] = pokemon.dict()
+        pokemon.pop("pokedex_number", None)
 
-        pokemon_data["metadata"] = {
+        pokemon["metadata"] = {
             "custom": True,
             "created_at": pokemon_odm.metadata.created_at,
             "updated_at": datetime.now(timezone.utc),
         }
 
-        updated_pokemon: Pokemon = await pokemon_odm.update(
-            **pokemon_data(exclude_unset=True)
-        )
+        await pokemon_odm.set(pokemon)
 
-        return updated_pokemon
+        return PokemonUpdateResponse(updated=True)
 
     async def delete(
         self,
@@ -207,8 +200,14 @@ class PokemonDetail(Resource):
         if not pokemon_odm:
             raise PokemonNotFound(pokedex_number)
 
-        await pokemon_odm.delete()
+        result: DeleteResult | None = await pokemon_odm.delete()
+
+        if not result:
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to delete Pokémon",
+            )
 
         return PokemonDeleteResponse(
-            deleted=True,
+            deleted=result.deleted_count == 1,
         )
