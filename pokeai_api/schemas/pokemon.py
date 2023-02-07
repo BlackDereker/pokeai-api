@@ -155,8 +155,8 @@ class Attributes(BaseModel):
 
 class Metadata(BaseModel):
     custom: bool = Field(default=True)
-    created_at: datetime
-    updated_at: datetime
+    created_at: datetime | None
+    updated_at: datetime | None
 
 
 class PokemonBase(APIModel):
@@ -169,7 +169,7 @@ class PokemonBase(APIModel):
     pokedex_number: int = Field(
         ..., description="The number of the Pokémon in the Pokédex", example=1
     )
-    percentage_male: float = Field(
+    percentage_male: float | None = Field(
         ...,
         description=(
             "The percentage of the Pokémon that are males. "
