@@ -166,9 +166,6 @@ class PokemonBase(APIModel):
     japanese_name: str = Field(
         ..., description="The Japanese name of the Pokémon", example="フシギダネ"
     )
-    pokedex_number: int = Field(
-        ..., description="The number of the Pokémon in the Pokédex", example=1
-    )
     percentage_male: float | None = Field(
         ...,
         description=(
@@ -256,6 +253,9 @@ class PokemonBase(APIModel):
 
 
 class Pokemon(PokemonBase):
+    pokedex_number: int = Field(
+        ..., description="The Pokedex number of the Pokémon", example=1
+    )
     metadata: Metadata = Field(
         ...,
         description="Metadata about the Pokémon",
@@ -267,12 +267,14 @@ class Pokemon(PokemonBase):
     )
 
 
-class PokemonPost(PokemonBase):
+class PokemonBody(PokemonBase):
     pass
 
 
-class PokemonUpdate(PokemonBase):
-    pass
+class PokemonUpdateResponse(BaseModel):
+    updated: bool = Field(
+        ..., description="Whether the Pokémon was updated", example=True
+    )
 
 
 class PokemonDeleteResponse(BaseModel):
