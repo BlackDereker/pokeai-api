@@ -9,7 +9,7 @@ class PokemonODM(Document):
     name: str
     japanese_name: str
     pokedex_number: Indexed(int, unique=True)
-    percentage_male: float
+    percentage_male: float | None
     type1: str
     type2: str | None
     classification: str
