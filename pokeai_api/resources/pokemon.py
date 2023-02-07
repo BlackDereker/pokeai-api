@@ -40,7 +40,7 @@ class PokemonList(Resource):
             limit=limit,
         ).to_list()
 
-        return [Pokemon.from_orm(pokemon_orm) for pokemon_orm in pokemon_orms]
+        return pokemon_orms
 
     async def post(
         self,
@@ -76,7 +76,7 @@ class PokemonList(Resource):
                 detail="Pokémon already exists with that Pokédex number",
             ) from e
 
-        return Pokemon.from_orm(pokemon_odm)
+        return pokemon_odm
 
 
 class PokemonDetail(Resource):
@@ -99,7 +99,7 @@ class PokemonDetail(Resource):
         if not pokemon_odm:
             raise PokemonNotFound(pokedex_number)
 
-        return Pokemon.from_orm(pokemon_odm)
+        return pokemon_odm
 
     async def put(
         self,
@@ -139,7 +139,7 @@ class PokemonDetail(Resource):
 
         updated_pokemon: Pokemon = await pokemon_odm.update(**pokemon_data)
 
-        return Pokemon.from_orm(updated_pokemon)
+        return updated_pokemon
 
     async def patch(
         self,
@@ -181,7 +181,7 @@ class PokemonDetail(Resource):
             **pokemon_data(exclude_unset=True)
         )
 
-        return Pokemon.from_orm(updated_pokemon)
+        return updated_pokemon
 
     async def delete(
         self,
